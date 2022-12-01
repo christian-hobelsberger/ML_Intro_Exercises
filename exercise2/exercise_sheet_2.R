@@ -122,9 +122,9 @@ print(learner_ablaone$model$coefficients)
 #' #### e)
 #' Assess the model's training loss in terms of MAE.
 
-# MAE metric
+#' MAE metric
 mae <- mlr3::msr("regr.mae")
 
-# performance scores
+#' performance scores
 pred_lm$score() # MSE
 pred_lm$score(mae)
