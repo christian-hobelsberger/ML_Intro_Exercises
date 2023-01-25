@@ -1,0 +1,118 @@
+---
+title: "2023_01_19_lab_session"
+author: "Christian Hobelsberger"
+date: '2023-01-19'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#' ### Data Import
+library(ggplot2)
+library(mlr3)
+library(mlr3learners)
+library(mlr3viz)
+library(mlbench)
+library(rpart.plot)
+library(mlr3filters)
+library(data.table)
+```
+
+# Exercise 1
+
+```{r}
+data_baseball <- fread("lab_sessions/data/baseball.csv")
+data_baseball$team <- as.factor(data_baseball$team)
+data_baseball$league <- as.factor(data_baseball$league)
+```
+
+## 1)
+Think about what random search actually means with regard to the search space and a suitable stopping criterion.
+
+```{r cars}
+summary(cars)
+```
+
+## 2)
+
+Implement the resampling procedure for n-fold CV as an auxiliary function that returns the train and test
+indices for each fold. The user should be able to feed in the data indices (idx), the number of folds, and a
+random seed.
+
+```{r pressure, echo=FALSE}
+resample_cv <- function(idx, folds, seed = 123) {
+    
+  # shuffle indicies
+  set.seed(seed)
+  idx <- idx[sample(idx, length(idx))]
+  # prepare objects needed to store indices
+  start_index <- 1
+  interval_length <- length(idx) / folds
+  idx_split_folds <- split(idx, ceiling(seq_along(idx)/interval_length))
+  idx_list <- list()
+  # CV iterations
+  for (i in seq(folds)) {
+    # Define test and train indices
+    test_idx <- unlist(idx_split_folds[i], use.names = FALSE)
+    train_idx <- unlist(idx_split_folds[-i], use.names = FALSE)
+    list_tmp <- list(test = test_idx,
+                     train = train_idx)
+    idx_list[[i]] <- list_tmp
+  }
+  return(idx_list)
+}
+```
+
+## 3 Tuning
+Perform the random search with the above specifcations, storing the results for each candidate configuration.
+Use the following set-up:
+```{r}
+# Define task and learner
+task <- TaskRegr$new("bb", backend = data_baseball, target = "runs_scored")
+lrn_knn = lrn("regr.kknn")
+# Define tuning settings
+search_space <- 1:100
+max_evals <- 80
+folds <- 5
+resampling_idx <- resample_cv(task$row_ids, folds)
+# Get configuration candidates
+set.seed(123)
+k_candidates <- sample(search_space, max_evals)
+
+
+# Define archive to store results
+tuning_archive <- data.table(
+"iteration" = seq_along(k_candidates), "k" = k_candidates, "ge" = 0
+)
+
+# Perform tuning
+for (i in tuning_archive$iteration) {
+  # Set current configuration
+  lrn_knn$param_set$values <- list(k = tuning_archive[iteration == i, k])
+  # Estimate GE via 5-CV
+  ge_est <- 0
+  for (j in folds) {
+    # Train on training data in j-th fold
+    lrn_knn$train(task, resampling_idx[[j]]$train)
+    # Predict on test data in j-th fold
+    predictions <- lrn_knn$predict(task, resampling_idx[[j]]$test)
+    # Accumulate estimated GE
+    ge_est <- ge_est + (1 / folds) * predictions$score()
+}
+  tuning_archive[iteration == i]$ge <- ge_est
+}
+```
+
+## 4
+In the last step, plot the estimated generalization error for different values of k:
+```{r}
+ggplot(tuning_archive, aes(x = k, y = ge)) +
+geom_line() +
+geom_point(tuning_archive, mapping = aes(x = k, y = ge))+ 
+geom_point(
+tuning_archive[which.min(tuning_archive$ge)],
+mapping = aes(x = k, y = ge),
+col = "blue",
+size = 5
+)
+```
+
