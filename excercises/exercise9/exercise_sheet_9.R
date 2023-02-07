@@ -36,8 +36,8 @@ rpart.plot(learner_spam$model, roundint = FALSE)
 
 #' Create 2 subsets:
 set.seed(456)
-index_subset1 <- sample.int(x = seq_len(4601), size = 4601 * 0.6)
-index_subset2 <- sample.int(x = seq_len(4601), size = 4601 * 0.6)
+index_subset1 <- sample.int(n = 4601, size = 4601 * 0.6)
+index_subset2 <- sample.int(n = 4601, size = 4601 * 0.6)
 
 for (i in list(index_subset1, index_subset2)) {
   learner_spam$train(task_spam, row_ids = i)
@@ -54,7 +54,7 @@ learner_forest = lrn("classif.ranger", "oob.error" = TRUE)
 #' Train model
 learner_forest$train(task_spam)
 #' OOB error
-learner$model$prediction.error
+learner_forest$model$prediction.error
 
 #' 
 #' #### d)

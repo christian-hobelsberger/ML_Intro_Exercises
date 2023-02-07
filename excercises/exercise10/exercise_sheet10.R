@@ -63,7 +63,7 @@ optimizer <- tnr("random_search", batch_size = 20)
 
 #' Tune!
 set.seed(123)
-optimizer$optimize(instance)
+optimizer$optimize(instance, )
 
 #' #### c)
 #' 

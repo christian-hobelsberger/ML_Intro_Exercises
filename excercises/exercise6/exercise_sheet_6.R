@@ -49,6 +49,3 @@ print(sapply(
   list(result_cv_3x10, result_cv_10x3, result_stratified, result_ho),
   function(i) i$aggregate()))
 
-# Resample
-rr = resample(task_credit2, learner_credit2, cv10, )
-
