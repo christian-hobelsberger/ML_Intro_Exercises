@@ -20,7 +20,7 @@ library(data.table)
 # Exercise 1
 
 ```{r}
-data_baseball <- fread("lab_sessions/data/baseball.csv")
+data_baseball <- fread("data/baseball.csv")
 data_baseball$team <- as.factor(data_baseball$team)
 data_baseball$league <- as.factor(data_baseball$league)
 ```
@@ -38,7 +38,7 @@ Implement the resampling procedure for n-fold CV as an auxiliary function that r
 indices for each fold. The user should be able to feed in the data indices (idx), the number of folds, and a
 random seed.
 
-```{r pressure, echo=FALSE}
+```{r pressure}
 resample_cv <- function(idx, folds, seed = 123) {
     
   # shuffle indicies
